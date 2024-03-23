@@ -11,11 +11,12 @@ type Location = {
  longitude: number;
 };
 
-export default function MapComponent() {
+function MapComponent() {
  const searchParams = useSearchParams();
  const search = searchParams.get('search');
  const [location, setLocation] = React.useState<Location>();
  const [isLoading, setIsLoading] = React.useState(true);
+ const [isError, setError] = React.useState(false);
  const mapRef = React.useRef<MapRef>(null);
 
  const flyTo = (coordinates: [number, number]): void => {
@@ -39,6 +40,9 @@ export default function MapComponent() {
       setIsLoading(true);
       const res = await fetch(`https://www.onemap.gov.sg/api/common/elastic/search?searchVal=${search}&returnGeom=Y&getAddrDetails=Y&pageNum=1`);
       const data = await res.json();
+      if(!data ||  !data.results || data.results.length == 0){
+        setError(true);
+      }
       setLocation({
         name: data?.results[0]?.ADDRESS,
         latitude: data?.results[0]?.LATITUDE,
@@ -55,6 +59,10 @@ export default function MapComponent() {
 
  if (!search) {
     return <div>Please provide a search parameter.</div>;
+ }
+
+ if(isError){
+    return <div>Use proper params</div>
  }
 
  return (
@@ -84,3 +92,13 @@ export default function MapComponent() {
     </Map>
  );
 }
+
+
+export default function MapComponentWithSuspense() {
+  return (
+     <React.Suspense fallback={<div>Loading...</div>}>
+       <MapComponent />
+     </React.Suspense>
+  );
+ }
+ 
