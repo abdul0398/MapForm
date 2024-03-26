@@ -14,7 +14,7 @@ type Location = {
 function MapComponent() {
   const searchParams = useSearchParams();
   const search = searchParams.get('search');
-  const [location, setLocation] = React.useState<Location>();
+  const [locations, setLocation] = React.useState<Location[]>();
   const [isLoading, setIsLoading] = React.useState(true);
   const [isError, setError] = React.useState(false);
   const mapRef = React.useRef<MapRef>(null);
@@ -43,11 +43,18 @@ function MapComponent() {
       if (!data || !data.results || data.results.length == 0) {
         setError(true);
       }
-      setLocation({
-        name: data?.results[0]?.ADDRESS,
-        latitude: data?.results[0]?.LATITUDE,
-        longitude: data?.results[0]?.LONGITUDE,
-      });
+
+      const markers = data.results.map((result: any) => {
+        return {
+          name: result.ADDRESS,
+          latitude: result.LATITUDE,
+          longitude: result.LONGITUDE,
+        }
+      })
+       
+
+
+      setLocation(markers);
       setIsLoading(false);
     }
     fetchCoordinate();
@@ -67,32 +74,35 @@ function MapComponent() {
 
   return (
     <Map
+    maxBounds={[103.596, 1.1443, 104.1, 1.4835]}
       ref={mapRef}
-      initialViewState={{
-        latitude: location?.latitude,
-        longitude: location?.longitude,
-        zoom: 13
-      }}
       mapStyle="https://www.onemap.gov.sg/maps/json/raster/mbstyle/Default.json"
     >
-     <Marker
-      key={location?.name}
-      latitude={location?.latitude as number}
-      longitude={location?.longitude as number}
-      offset={[0, -50]}
-    >
-      <div style={{ position: 'relative', textAlign: 'center' }}>
-        <div className='bg-white p-2 rounded-md' style={{ position: 'absolute', top: '-56px', left: '-135%', minWidth:'201px', height:'50px' }}>
-          {location?.name}
-        </div>
-        <FaMapMarkerAlt
-          size={50}
-          title={location?.name}
-          className='mx-auto'
-          style={{ position: 'relative' }}
-        />
-      </div>
-    </Marker>
+      {locations?.map((location) => {
+        return (
+        <Marker
+          key={location?.name}
+          latitude={location?.latitude as number}
+          longitude={location?.longitude as number}
+          offset={[0, -50]}
+        >
+          <div style={{ position: 'relative', textAlign: 'center' }}>
+            {/* <div className='bg-white p-2 rounded-md' style={{ position: 'absolute', top: '-56px', left: '-135%', minWidth: '201px', height: '50px' }}>
+              {location?.name}
+            </div> */}
+            <FaMapMarkerAlt
+              size={50}
+              title={location?.name}
+              className='mx-auto'
+              style={{ position: 'relative' }}
+            />
+          </div>
+        </Marker>
+        )
+
+
+      })}
+
       <FullscreenControl />
       <ScaleControl />
     </Map>
